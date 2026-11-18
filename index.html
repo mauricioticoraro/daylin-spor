@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DailySport - Evaluación y Gerencia de Proyectos | Universidad del Tolima</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --ut-red: #9B1B20;
+    --ut-gold: #D4A017;
+    --bg-light: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --accent-teal: #0D9488;
+    --accent-blue: #2563EB;
+    --accent-amber: #D97706;
+    --border-light: #E2E8F0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  body {
+    background-color: #E2E8F0;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  #presentation-container {
+    width: 96vw;
+    max-width: 1360px;
+    height: 88vh;
+    max-height: 780px;
+    background: var(--bg-light);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #CBD5E1;
+  }
+  .slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 24px 36px 56px 36px;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: fadeIn 0.35s ease;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Header Bar */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--ut-red);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .slide-title-group { display: flex; align-items: center; gap: 12px; }
+  .slide-badge {
+    background: var(--ut-red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .slide-title { font-size: 1.45rem; font-weight: 800; color: #0F172A; }
+  .ut-mini-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FFFFFF;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  /* Grid Layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; align-items: stretch; }
+  .grid-1-2 { display: grid; grid-template-columns: 1.05fr 1.25fr; gap: 18px; flex: 1; align-items: stretch; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; }
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card h3 {
+    font-size: 0.95rem;
+    color: var(--ut-red);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid #F1F5F9;
+    padding-bottom: 5px;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  th {
+    background-color: #FEF2F2;
+    color: var(--ut-red);
+    font-weight: 700;
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 2px solid #FECACA;
+  }
+  td { padding: 5px 8px; border-bottom: 1px solid #F1F5F9; color: #334155; }
+  tr:nth-child(even) td { background-color: #F8FAFC; }
+  tr.highlight-row td { background-color: #FEF9C3; font-weight: 700; color: #854D0E; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+
+  /* Chart containers */
+  .chart-box { position: relative; width: 100%; height: 220px; flex: 1; min-height: 180px; }
+  .chart-box-sm { position: relative; width: 100%; height: 175px; }
+
+  /* KPI pills */
+  .kpi-row { display: flex; gap: 10px; margin-top: 8px; }
+  .kpi {
+    flex: 1;
+    background: #F1F5F9;
+    border-left: 4px solid var(--ut-red);
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+  .kpi.teal { border-left-color: var(--accent-teal); background: #F0FDFA; }
+  .kpi.gold { border-left-color: var(--ut-gold); background: #FEFCE8; }
+  .kpi-label { font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+  .kpi-val { font-size: 1.05rem; font-weight: 800; color: #0F172A; }
+
+  /* Cover Slide */
+  .cover-slide {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FEF2F2 55%, #FEFCE8 100%);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .cover-box {
+    max-width: 880px;
+    background: rgba(255,255,255,0.96);
+    padding: 28px 44px;
+    border-radius: 20px;
+    border: 2px solid #FECACA;
+    box-shadow: 0 15px 35px rgba(155, 27, 32, 0.08);
+  }
+  .cover-tag {
+    display: inline-block;
+    background: #FEF2F2;
+    color: var(--ut-red);
+    border: 1px solid #FCA5A5;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .cover-title { font-size: 2.5rem; font-weight: 900; color: var(--ut-red); line-height: 1.15; margin-bottom: 6px; }
+  .cover-sub { font-size: 1.1rem; color: #334155; font-weight: 600; margin-bottom: 18px; }
+  .authors-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+    background: #F8FAFC;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  /* Navigation Controls */
+  #nav-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 46px;
+    background: #FFFFFF;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 10;
+  }
+  .nav-btn {
+    background: var(--ut-red);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .nav-btn:hover { background: #7F1D1D; }
+  .nav-btn:disabled { background: #CBD5E1; cursor: not-allowed; }
+  .dots { display: flex; gap: 6px; }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #CBD5E1;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--ut-red); width: 24px; border-radius: 5px; }
+
+  /* Diagram Flow */
+  .flow-steps { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 8px 0; }
+  .step-pill {
+    flex: 1;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #1E40AF;
+  }
+  .step-arrow { color: var(--ut-red); font-weight: 900; font-size: 1rem; }
+  .pill-list { list-style: none; display: flex; flex-direction: column; gap: 7px; font-size: 0.82rem; }
+  .pill-list li {
+    background: #F8FAFC;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-teal);
+  }
+
+  /* Organigrama Horizontal (Izquierda a Derecha) */
+  .org-horizontal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    gap: 0;
+  }
+  .org-root {
+    background: #FCE7F3;
+    border: 2px solid #EC4899;
+    color: #831843;
+    font-weight: 800;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 155px;
+    box-shadow: 0 2px 6px rgba(236, 72, 153, 0.12);
+  }
+  .org-root span {
+    display: block;
+    font-weight: 500;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    color: #9D174D;
+  }
+  .org-h-line {
+    width: 24px;
+    height: 2px;
+    background: #64748B;
+  }
+  .org-branches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 2px solid #64748B;
+    padding: 4px 0;
+  }
+  .org-branch-item {
+    display: flex;
+    align-items: center;
+  }
+  .org-branch-tick {
+    width: 18px;
+    height: 2px;
+    background: #64748B;
+  }
+  .org-leaf {
+    flex: 1;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    min-width: 185px;
+  }
+  .org-leaf span {
+    display: block;
+    font-weight: 500;
+    font-size: 0.69rem;
+    margin-top: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div id="presentation-container">
+
+  <!-- SLIDE 1: PORTADA -->
+  <section class="slide cover-slide active" id="slide-1">
+    <div class="cover-box">
+      <!-- Logotipo Institucional Universidad del Tolima - Acreditada de Alta Calidad -->
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px;">
+        <svg width="365" height="145" viewBox="0 0 430 172" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Universidad del Tolima - Acreditada de Alta Calidad">
+          <rect x="0" y="0" width="430" height="172" rx="8" fill="#FFFFFF"/>
+
+          <!-- Bloque Izquierdo: Monograma Rojo UT -->
+          <g transform="translate(46, 12)">
+            <!-- Barra superior T -->
+            <rect x="0" y="0" width="96" height="22" fill="#E31E24"/>
+            <!-- Brazo izquierdo U -->
+            <path d="M 0,27 H 22 V 63 C 22,76 32,84 48,84 C 64,84 74,76 74,63 V 27 H 96 V 64 C 96,90 77,104 48,104 C 19,104 0,90 0,64 Z" fill="#E31E24"/>
+            <!-- Vástago central T -->
+            <rect x="37" y="18" width="22" height="58" fill="#E31E24"/>
+          </g>
+
+          <!-- Texto Institucional Universidad del Tolima -->
+          <text x="94" y="132" font-family="'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="800" fill="#111827" text-anchor="middle" letter-spacing="-0.2">Universidad</text>
+          <text x="94" y="148" font-family="'Segoe UI', Arial, sans-serif" font-size="16.5" font-weight="800" fill="#111827" text-anchor="middle" letter-spacing="-0.2">del Tolima</text>
+
+          <!-- Línea Divisoria Vertical Roja -->
+          <line x1="206" y1="12" x2="206" y2="148" stroke="#E31E24" stroke-width="2.5"/>
+
+          <!-- Bloque Derecho: Emblema Circular Acreditación Alta Calidad -->
+          <g transform="translate(314, 58)">
+            <!-- Aro de 5 segmentos entrelazados (Verde, Rojo Coral, Morado, Naranja, Azul) -->
+            <!-- Verde superior (234° a 306°) -->
+            <path d="M -27.0,-37.2 A 46,46 0 0,1 27.0,-37.2" fill="none" stroke="#45A868" stroke-width="11" stroke-linecap="butt"/>
+            <!-- Rojo derecha-arriba (306° a 18°) -->
+            <path d="M 27.0,-37.2 A 46,46 0 0,1 43.7,14.2" fill="none" stroke="#E55858" stroke-width="11" stroke-linecap="butt"/>
+            <!-- Morado derecha-abajo (18° a 90°) -->
+            <path d="M 43.7,14.2 A 46,46 0 0,1 0,46" fill="none" stroke="#B66AA5" stroke-width="11" stroke-linecap="butt"/>
+            <!-- Naranja izquierda-abajo (90° a 162°) -->
+            <path d="M 0,46 A 46,46 0 0,1 -43.7,14.2" fill="none" stroke="#F29B4B" stroke-width="11" stroke-linecap="butt"/>
+            <!-- Azul izquierda-arriba (162° a 234°) -->
+            <path d="M -43.7,14.2 A 46,46 0 0,1 -27.0,-37.2" fill="none" stroke="#53B2E8" stroke-width="11" stroke-linecap="butt"/>
+
+            <!-- Líneas de unión (manos entrelazadas) -->
+            <g stroke="#FFFFFF" stroke-width="1.2">
+              <line x1="-23" y1="-32" x2="-31" y2="-42"/>
+              <line x1="23" y1="-32" x2="31" y2="-42"/>
+              <line x1="38" y1="12" x2="49" y2="16"/>
+              <line x1="0" y1="40" x2="0" y2="52"/>
+              <line x1="-38" y1="12" x2="-49" y2="16"/>
+            </g>
+
+            <!-- 5 Caritas sonrientes interiores -->
+            <!-- Verde arriba -->
+            <g transform="translate(0, -24)">
+              <circle r="10.5" fill="#329F5B"/>
+              <path d="M -5,-2 Q 0,-7 5,-2" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="-3" cy="1" r="1.1" fill="#FFFFFF"/>
+              <circle cx="3" cy="1" r="1.1" fill="#FFFFFF"/>
+            </g>
+            <!-- Naranja-Rojo derecha -->
+            <g transform="translate(23, -7)">
+              <circle r="10.5" fill="#E86A42"/>
+              <circle cx="-3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <circle cx="3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <path d="M -4,2 Q 0,6 4,2" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+            <!-- Morado abajo-derecha -->
+            <g transform="translate(14, 20)">
+              <circle r="10.5" fill="#B565A7"/>
+              <circle cx="-3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <circle cx="3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <path d="M -4,2 Q 0,6 4,2" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+            <!-- Naranja abajo-izquierda -->
+            <g transform="translate(-14, 20)">
+              <circle r="10.5" fill="#F39C4F"/>
+              <circle cx="-3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <circle cx="3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <path d="M -4,2 Q 0,6 4,2" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+            <!-- Azul izquierda -->
+            <g transform="translate(-23, -7)">
+              <circle r="10.5" fill="#29ABE2"/>
+              <circle cx="-3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <circle cx="3" cy="-2" r="1.1" fill="#FFFFFF"/>
+              <path d="M -4,2 Q 0,6 4,2" fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+          </g>
+
+          <!-- Texto ACREDITADA DE ALTA CALIDAD -->
+          <text x="314" y="131" font-family="'Segoe UI', Arial, sans-serif" font-size="15.5" font-weight="900" fill="#111827" text-anchor="middle" letter-spacing="0.4">ACREDITADA</text>
+          <text x="314" y="145" font-family="'Segoe UI', Arial, sans-serif" font-size="10.2" font-weight="800" fill="#1F2937" text-anchor="middle" letter-spacing="0.5">DE ALTA CALIDAD</text>
+
+          <!-- Franja Inferior Roja con Lema -->
+          <rect x="28" y="153" width="374" height="17" fill="#E31E24"/>
+          <text x="215" y="165" font-family="Georgia, 'Times New Roman', serif" font-size="11.5" font-weight="700" font-style="italic" fill="#FFFFFF" text-anchor="middle">¡Construimos la universidad que soñamos!</text>
+        </svg>
+        <div style="font-size:0.8rem; font-weight:700; color:#475569; margin-top:4px;">
+          Instituto de Educación a Distancia (IDEAD) • Programa de Administración Financiera
+        </div>
+      </div>
+
+      <span class="cover-tag">EVALUACIÓN Y GERENCIA DE PROYECTOS</span>
+      <h1 class="cover-title">PROYECTO DAILYSPORT</h1>
+      <p class="cover-sub">Viabilidad para la comercialización del <strong>Short Push Up tipo Dfyne</strong> en Rovira, Tolima</p>
+
+      <div class="authors-grid">
+        <div>• Miguel Mauricio Ticora Rodríguez</div>
+        <div>• Stefania Murillo Herrera</div>
+        <div>• Daylin Zayury Alfonso Rodríguez</div>
+        <div>• Leidy Daniela Babativa Chitiva</div>
+      </div>
+
+      <div style="font-size:0.85rem; color:#475569;">
+        <strong>Docente:</strong> Blanca &nbsp;|&nbsp; <strong>Sede:</strong> Rovira – Tolima &nbsp;|&nbsp; <strong>Fecha:</strong> 20 de Noviembre de 2026
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PROBLEMA, OBJETIVO GENERAL Y ACEPTACIÓN -->
+  <section class="slide" id="slide-2">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">02</span>
+        <h2 class="slide-title">Problema, Objetivo General y Aceptación del Producto</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>📋 Formulación del Problema y Objetivo General</h3>
+        <table>
+          <thead>
+            <tr><th style="width:28%;">Componente</th><th>Síntesis Ejecutiva del Proyecto</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Pregunta Problema</strong></td>
+              <td>¿Es viable comercializar el <em>Short Push Up tipo Dfyne</em> en DailySport (Rovira) bajo las condiciones actuales de demanda, oferta y recursos?</td>
+            </tr>
+            <tr>
+              <td><strong>Objetivo General</strong></td>
+              <td>Determinar la viabilidad comercial, técnica, administrativa y financiera para su implementación sostenible (2026–2031).</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px; font-size:0.82rem; color:#334155; line-height:1.45;">
+          <strong style="color:var(--ut-red);">Hallazgo Clave de Encuesta (n = 89 mujeres en Rovira):</strong><br>
+          La investigación de mercados confirma una alta receptividad hacia el <strong>Short Push Up tipo Dfyne</strong>: 8 de cada 10 encuestadas ya identifican la prenda, manifiestan intención real de compra y priorizan la calidad textil sobre el precio.
+        </div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Población Muestra</div><div class="kpi-val">89 Mujeres</div></div>
+          <div class="kpi teal"><div class="kpi-label">Intención Compra</div><div class="kpi-val">84% Sí</div></div>
+          <div class="kpi gold"><div class="kpi-label">Criterio #1</div><div class="kpi-val">84% Calidad</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Indicadores de Aceptación del Producto (3 Gráficas Clave)</h3>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; flex:1; align-items:center;">
+          <div class="chart-box-sm" style="height:215px;"><canvas id="chartKnow"></canvas></div>
+          <div class="chart-box-sm" style="height:215px;"><canvas id="chartBuy"></canvas></div>
+          <div class="chart-box-sm" style="height:215px;"><canvas id="chartCriteria"></canvas></div>
+        </div>
+        <p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:6px;">
+          Conocimiento (<strong>82%</strong>), disposición de compra (<strong>84%</strong>) y preferencia por calidad (<strong>84%</strong>) validan la aceptación comercial.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: ESTUDIO DE MERCADO -->
+  <section class="slide" id="slide-3">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">03</span>
+        <h2 class="slide-title">Estudio de Mercado: Demanda, Oferta y Competencia</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>📅 Proyección Demanda vs. Oferta (Unidades)</h3>
+        <table>
+          <thead>
+            <tr><th>Año</th><th class="num">Demanda</th><th class="num">Oferta</th><th class="num">Franja (+)</th><th class="num">Precio</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>2026</strong></td><td class="num">16.424</td><td class="num">13.964</td><td class="num" style="color:#0D9488;font-weight:700;">2.460</td><td class="num">$94.000</td></tr>
+            <tr><td><strong>2027</strong></td><td class="num">17.409</td><td class="num">14.686</td><td class="num" style="color:#0D9488;font-weight:700;">2.723</td><td class="num">$99.866</td></tr>
+            <tr><td><strong>2028</strong></td><td class="num">18.454</td><td class="num">16.207</td><td class="num" style="color:#0D9488;font-weight:700;">2.247</td><td class="num">$106.097</td></tr>
+            <tr><td><strong>2029</strong></td><td class="num">19.561</td><td class="num">17.545</td><td class="num" style="color:#0D9488;font-weight:700;">2.016</td><td class="num">$112.718</td></tr>
+            <tr><td><strong>2030</strong></td><td class="num">20.735</td><td class="num">19.252</td><td class="num" style="color:#0D9488;font-weight:700;">1.483</td><td class="num">$119.751</td></tr>
+            <tr><td><strong>2031</strong></td><td class="num">21.979</td><td class="num">21.053</td><td class="num" style="color:#0D9488;font-weight:700;">926</td><td class="num">$127.224</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Competidor</th><th class="num">Unid. 2026</th><th class="num">Part. %</th><th>Canal</th></tr></thead>
+          <tbody>
+            <tr><td>MYL Ropa Deportiva</td><td class="num">6.000</td><td class="num">42,97%</td><td>Físico</td></tr>
+            <tr><td>Tienda Conny Sport</td><td class="num">5.500</td><td class="num">39,39%</td><td>Físico</td></tr>
+            <tr class="highlight-row"><td>DailySport</td><td class="num">2.464</td><td class="num">17,64%</td><td>Físico + Digital</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📈 Gráfico Combinado Excel: Brecha de Mercado y Participación</h3>
+        <div class="chart-box"><canvas id="chartMarketCombo"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi teal"><div class="kpi-label">Consumo Per Cápita</div><div class="kpi-val">6 Und / Año</div></div>
+          <div class="kpi"><div class="kpi-label">Proveedor Nacional</div><div class="kpi-val">Corza (1-3 días)</div></div>
+          <div class="kpi gold"><div class="kpi-label">Costo Compra Unit.</div><div class="kpi-val">$25.000</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: ESTUDIO TÉCNICO -->
+  <section class="slide" id="slide-4">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">04</span>
+        <h2 class="slide-title">Estudio Técnico: Tamaño, Localización y Planta</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>📍 Matrices de Localización y Distribución Física (53,25 m²)</h3>
+        <table>
+          <thead><tr><th>Macrolocalización</th><th class="num">Puntaje</th><th>Microlocalización</th><th class="num">Puntaje</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row"><td>1. Rovira (Ganador)</td><td class="num">6,90</td><td>1. B. Miraflores (Ganador)</td><td class="num">6,75</td></tr>
+            <tr><td>2. Líbano</td><td class="num">6,55</td><td>2. B. Centro</td><td class="num">6,65</td></tr>
+            <tr><td>3. Guamo</td><td class="num">6,40</td><td>3. Alfonso Reyes E.</td><td class="num">6,20</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Área Local</th><th class="center">Dimensión</th><th class="num">m²</th><th>Tamaño Real Ventas</th><th class="num">Und.</th></tr></thead>
+          <tbody>
+            <tr><td>Área Comercial</td><td class="center">6,0 x 4,5 m</td><td class="num">27,00</td><td>Año 2027 (Limitado)</td><td class="num">2.611</td></tr>
+            <tr><td>Bodega</td><td class="center">5,0 x 2,0 m</td><td class="num">10,00</td><td>Año 2029</td><td class="num">2.934</td></tr>
+            <tr><td>Admón. + Contable</td><td class="center">2 x (2,5x2,0)</td><td class="num">10,00</td><td>Año 2031</td><td class="num">3.297</td></tr>
+            <tr><td>Vestier + Baño</td><td class="center">4m² + 2,25m²</td><td class="num">6,25</td><td>Tiempo Ciclo Logístico</td><td class="num">107 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📊 Diagramas de Barras (Localización) y Anillo (Distribución m²)</h3>
+        <div style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:10px; flex:1; align-items:center;">
+          <div class="chart-box-sm"><canvas id="chartLocation"></canvas></div>
+          <div class="chart-box-sm"><canvas id="chartLayoutPie"></canvas></div>
+        </div>
+        <div class="flow-steps">
+          <div class="step-pill">1. Pedido<br>(20m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">2. Recepción<br>(22m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">3. Bodega<br>(15m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">4. Exhibición<br>(20m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">5. Venta/Entrega<br>(30m)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: ESTUDIO ADMINISTRATIVO -->
+  <section class="slide" id="slide-5">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">05</span>
+        <h2 class="slide-title">Estudio Administrativo: Estructura Organizacional y Nómina</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>👥 Planta de Personal y Nómina Mensual (4 Empleados)</h3>
+        <table>
+          <thead><tr><th>Cargo</th><th>Tipo de Contrato</th><th class="num">Básico Mes</th><th class="num">Deduc. (8%)</th><th class="num">Neto Pagar</th></tr></thead>
+          <tbody>
+            <tr><td>Administradora</td><td>Término Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td>Contador</td><td>Prest. de Servicios</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td>Vendedor</td><td>Término Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td>Almacenista</td><td>Término Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr class="highlight-row"><td>TOTAL MENSUAL</td><td>Jornada 42h / sem</td><td class="num">$7.003.620</td><td class="num">$560.290</td><td class="num">$6.443.330</td></tr>
+          </tbody>
+        </table>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Nómina Anual Base</div><div class="kpi-val">$84,04 M</div></div>
+          <div class="kpi teal"><div class="kpi-label">Jornada Laboral</div><div class="kpi-val">42 Horas/Sem</div></div>
+          <div class="kpi gold"><div class="kpi-label">Estructura</div><div class="kpi-val">Horizontal</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏢 Organigrama Horizontal y Distribución Salarial</h3>
+        <div class="org-horizontal">
+          <div class="org-root">
+            ADMINISTRADORA
+            <span>Dirección General</span>
+          </div>
+          <div class="org-h-line"></div>
+          <div class="org-branches">
+            <div class="org-branch-item">
+              <div class="org-branch-tick"></div>
+              <div class="org-leaf" style="background:#DBEAFE; border:1.5px solid #3B82F6; color:#1E3A8A;">
+                CONTADOR
+                <span>Gestión Financiera y Tributaria</span>
+              </div>
+            </div>
+            <div class="org-branch-item">
+              <div class="org-branch-tick"></div>
+              <div class="org-leaf" style="background:#EDE9FE; border:1.5px solid #8B5CF6; color:#4C1D95;">
+                ALMACENISTA
+                <span>Inventarios, Recepción y Bodega</span>
+              </div>
+            </div>
+            <div class="org-branch-item">
+              <div class="org-branch-tick"></div>
+              <div class="org-leaf" style="background:#FEF3C7; border:1.5px solid #F59E0B; color:#78350F;">
+                VENDEDOR
+                <span>Atención en Tienda y Redes Sociales</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box-sm" style="margin-top:8px;"><canvas id="chartPayroll"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: ESTUDIO LEGAL -->
+  <section class="slide" id="slide-6">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">06</span>
+        <h2 class="slide-title">Estudio Legal: Constitución Societaria y Normatividad</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>⚖️ Marco Societario, Tributario y Comercial</h3>
+        <table>
+          <thead><tr><th style="width:32%;">Aspecto Legal</th><th>Disposición Aplicable a DailySport S.A.S.</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Tipo Societario</strong></td><td>Sociedad por Acciones Simplificada – <strong>S.A.S.</strong> (Ley 1258 de 2008), constituida por 1 accionista único mediante documento privado.</td></tr>
+            <tr><td><strong>Actividad CIIU</strong></td><td><strong>4771</strong> – Comercio al por menor de prendas de vestir y sus accesorios en establecimientos especializados.</td></tr>
+            <tr><td><strong>Formalización y Permisos</strong></td><td>Registro Mercantil en Cámara de Comercio, inscripción RUT (DIAN), registro ICA en Alcaldía de Rovira, Uso de Suelos y Certificado de Seguridad.</td></tr>
+            <tr><td><strong>Normativa Laboral y Consumidor</strong></td><td>Código Sustantivo del Trabajo (contratos y seguridad social) y <strong>Ley 1480 de 2011</strong> (Estatuto del Consumidor: garantías, cambios y retracto).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📑 Presupuesto de Constitución y Renovaciones Legales</h3>
+        <table>
+          <thead><tr><th>Concepto Legal y Regulatorio</th><th>Periodicidad</th><th class="num">Valor COP</th></tr></thead>
+          <tbody>
+            <tr><td>Activos Diferidos: Constitución S.A.S. y Matrícula</td><td>Año 0 (Único)</td><td class="num">$858.000</td></tr>
+            <tr><td>Renovación Matrícula Mercantil, ICA y Pólizas</td><td>Año 1</td><td class="num">$920.000</td></tr>
+            <tr><td>Renovación Registros y Permisos Operativos</td><td>Año 2</td><td class="num">$980.000</td></tr>
+            <tr><td>Renovación Registros y Permisos Operativos</td><td>Año 3</td><td class="num">$1.050.000</td></tr>
+            <tr><td>Renovación Registros y Permisos Operativos</td><td>Año 4</td><td class="num">$1.120.000</td></tr>
+            <tr><td>Renovación Registros y Permisos Operativos</td><td>Año 5</td><td class="num">$1.200.000</td></tr>
+          </tbody>
+        </table>
+        <ul class="pill-list" style="margin-top:8px;">
+          <li><strong>🛡️ Protección Patrimonial:</strong> La figura S.A.S. limita la responsabilidad del accionista hasta el monto de sus aportes ($48,18 M).</li>
+          <li><strong>✅ Cumplimiento Municipal:</strong> Habilitación comercial plena en el Barrio Miraflores de Rovira sin barreras regulatorias.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: COSTOS E INVERSIONES ESPECÍFICOS -->
+  <section class="slide" id="slide-7">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">07</span>
+        <h2 class="slide-title">Consolidado Específico de Inversiones y Costos (5 Años)</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>💰 Desglose Detallado de Inversión Inicial (Año 0)</h3>
+        <table>
+          <thead><tr><th>Componente de Inversión</th><th>Detalle Específico</th><th class="num">Valor COP</th><th class="num">%</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Capital de Trabajo</strong></td>
+              <td>Inventario inicial Corza ($25.000/und), nómina inicial, arriendo Miraflores y servicios</td>
+              <td class="num">$133.369.136</td>
+              <td class="num">90,01%</td>
+            </tr>
+            <tr>
+              <td><strong>Activos Fijos</strong></td>
+              <td>Exhibidores, maniquíes, mobiliario tienda/vestier, equipo POS y estantería bodega</td>
+              <td class="num">$13.950.000</td>
+              <td class="num">9,41%</td>
+            </tr>
+            <tr>
+              <td><strong>Activos Diferidos</strong></td>
+              <td>Constitución S.A.S., Cámara de Comercio, RUT/ICA y pólizas iniciales</td>
+              <td class="num">$858.000</td>
+              <td class="num">0,58%</td>
+            </tr>
+            <tr class="highlight-row">
+              <td colspan="2"><strong>TOTAL INVERSIÓN INICIAL DEL PROYECTO</strong></td>
+              <td class="num">$148.177.136</td>
+              <td class="num">100%</td>
+            </tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Costos por Estudio (Rubros)</th><th class="num">Año 1</th><th class="num">Año 3</th><th class="num">Año 5</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Mercado</strong> (Prenda $20k + flete $5k + pauta)</td><td class="num">$33.010.000</td><td class="num">$70.950.000</td><td class="num">$114.090.000</td></tr>
+            <tr><td><strong>Técnico</strong> (Arriendo 53,25m², servicios, mant.)</td><td class="num">$33.010.000</td><td class="num">$37.800.000</td><td class="num">$43.280.000</td></tr>
+            <tr><td><strong>Administrativo</strong> (Nómina 4 cargos + papelería)</td><td class="num">$68.840.000</td><td class="num">$78.820.000</td><td class="num">$90.040.000</td></tr>
+            <tr><td><strong>Legal</strong> (Renovación Cámara, ICA, pólizas)</td><td class="num">$920.000</td><td class="num">$1.050.000</td><td class="num">$1.200.000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📊 Evolución Apilada de Costos Operativos por Estudio</h3>
+        <div class="chart-box"><canvas id="chartCostsStacked"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Préstamo Bancario</div><div class="kpi-val">$100.000.000</div></div>
+          <div class="kpi teal"><div class="kpi-label">Aporte Propio</div><div class="kpi-val">$48.177.136</div></div>
+          <div class="kpi gold"><div class="kpi-label">Intereses 5 Años</div><div class="kpi-val">$42.157.272</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: EVALUACIÓN FINANCIERA -->
+  <section class="slide" id="slide-8">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">08</span>
+        <h2 class="slide-title">Evaluación Financiera: Flujos de Caja e Indicadores</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>💵 Flujos de Caja Netos y Tabla de Indicadores</h3>
+        <table>
+          <thead><tr><th>Periodo</th><th class="num">FC Con Financ.</th><th class="num">FC Sin Financ.</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Año 0</strong></td><td class="num" style="color:#DC2626;">-$48.177.136</td><td class="num" style="color:#DC2626;">-$148.177.136</td></tr>
+            <tr><td><strong>Año 1</strong></td><td class="num">$48.661.342</td><td class="num">$72.542.797</td></tr>
+            <tr><td><strong>Año 2</strong></td><td class="num">$69.763.099</td><td class="num">$94.346.685</td></tr>
+            <tr><td><strong>Año 3</strong></td><td class="num">$72.421.195</td><td class="num">$97.798.189</td></tr>
+            <tr><td><strong>Año 4</strong></td><td class="num">$86.895.107</td><td class="num">$113.168.652</td></tr>
+            <tr><td><strong>Año 5*</strong></td><td class="num">$229.578.381</td><td class="num">$256.865.028</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Indicador</th><th class="num">Con Financiación</th><th class="num">Sin Financiación</th><th>Decisión</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row"><td><strong>VAN</strong></td><td class="num">$221.415.980</td><td class="num">$197.740.716</td><td>✅ Viable (&gt;0)</td></tr>
+            <tr class="highlight-row"><td><strong>TIR</strong></td><td class="num">127%</td><td class="num">60%</td><td>✅ Alta Rentab.</td></tr>
+            <tr><td><strong>RBC</strong></td><td class="num">1,14</td><td class="num">1,25</td><td>✅ Beneficio &gt; Costo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📈 Comparativa de Flujos de Caja y Amortización de Deuda</h3>
+        <div class="chart-box"><canvas id="chartCashFlow"></canvas></div>
+        <p style="font-size:0.74rem; color:var(--text-muted); margin-top:6px;">
+          *El Año 5 incluye recuperación de capital de trabajo ($133,37 M). El apalancamiento eleva la <strong>TIR del 60% al 127%</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: GERENCIA DEL PROYECTO -->
+  <section class="slide" id="slide-9">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">09</span>
+        <h2 class="slide-title">Gerencia del Proyecto: EDT, Cronograma y Riesgos</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🗂️ Estructura de Desglose del Trabajo (EDT) y Riesgos</h3>
+        <table>
+          <thead><tr><th>Fase PMBOK</th><th>Entregables Clave</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1. Inicio</strong></td><td>Acta de Constitución (01/01/2026), alcance y patrocinio.</td></tr>
+            <tr><td><strong>2. Planeación</strong></td><td>Presupuesto, plan de adquisiciones (Corza) y calidad.</td></tr>
+            <tr><td><strong>3. Ejecución</strong></td><td>Adecuación local Miraflores, contratación y lanzamiento.</td></tr>
+            <tr><td><strong>4. Control</strong></td><td>Seguimiento de inventarios en Excel, KPIs y presupuesto.</td></tr>
+            <tr><td><strong>5. Cierre</strong></td><td>Consolidación documental, lecciones y aprobación final.</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Riesgo Identificado</th><th>Mitigación</th></tr></thead>
+          <tbody>
+            <tr><td>Retraso entrega proveedores</td><td>Proveedor nacional Corza (1-3 días)</td></tr>
+            <tr><td>Desviación costos / inventario</td><td>Control semanal Excel y punto reorden</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📅 Diagrama de Gantt (Implementación Año 0 - Meses)</h3>
+        <div class="chart-box"><canvas id="chartGantt"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Aprobación Acta</div><div class="kpi-val">01 Ene 2026</div></div>
+  <!-- SLIDE 10: CONCLUSIONES -->
+  <section class="slide" id="slide-10">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">10</span>
+        <h2 class="slide-title">Conclusiones Integrales y Recomendaciones</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>✅ Matriz de Viabilidad por Dimensión</h3>
+        <table>
+          <thead><tr><th>Dimensión</th><th>Dictamen</th><th>Respaldo Cuantitativo</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Mercado</strong></td><td><span style="color:#0D9488;font-weight:700;">Favorable</span></td><td>Demanda supera oferta todos los años (franja de 2.460 und. en 2026) y 84% intención de compra.</td></tr>
+            <tr><td><strong>Técnica</strong></td><td><span style="color:#0D9488;font-weight:700;">Viable</span></td><td>Local de 53,25 m² en B. Miraflores (6,75 pts) y proceso logístico ágil sin manufactura.</td></tr>
+            <tr><td><strong>Admin/Legal</strong></td><td><span style="color:#0D9488;font-weight:700;">Sólida</span></td><td>Constitución como S.A.S. (CIIU 4771) y estructura horizontal eficiente de 4 cargos.</td></tr>
+            <tr class="highlight-row"><td><strong>Financiera</strong></td><td><span style="color:#0D9488;font-weight:800;">Altamente Rentable</span></td><td>VAN $221,4 M, TIR 127% y RBC 1,14 con financiación (recuperación rápida).</td></tr>
+          </tbody>
+        </table>
+        <ul class="pill-list" style="margin-top:8px;">
+          <li><strong>🚀 Recomendación de Ejecución:</strong> Iniciar formalización S.A.S. y contrato con proveedor Corza bajo el esquema apalancado ($100 M deuda + $48,18 M aporte propio) para maximizar la rentabilidad sobre el patrimonio.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📊 Indicadores Clave de Viabilidad del Proyecto (%)</h3>
+        <div class="chart-box"><canvas id="chartViabilityBars"></canvas></div>
+        <p style="font-size:0.74rem; color:var(--text-muted); text-align:center; margin-top:6px;">
+          Comparativa directa de aceptación comercial, margen unitario y tasa interna de retorno (TIR).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: DIAPOSITIVA EXTRA - ESTRATEGIA OMNICANAL Y UNIT ECONOMICS -->
+  <section class="slide" id="slide-11">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">11</span>
+        <h2 class="slide-title">Propuesta de Valor: Economía Unitaria y Estrategia Omnicanal</h2>
+      </div>
+      <div class="ut-mini-logo"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🏷️ Desglose de Precio y Ventaja Competitiva</h3>
+        <table>
+          <thead><tr><th>Componente Unitario (2026)</th><th class="num">Valor COP</th><th class="num">% Precio</th></tr></thead>
+          <tbody>
+            <tr><td>Costo Prenda (Proveedor Corza)</td><td class="num">$20.000</td><td class="num">21,3%</td></tr>
+            <tr><td>Transporte y Logística</td><td class="num">$5.000</td><td class="num">5,3%</td></tr>
+            <tr class="highlight-row"><td>Margen Bruto + Contribución Fija</td><td class="num">$69.000</td><td class="num">73,4%</td></tr>
+            <tr><td><strong>Precio Venta Mercado (2026)</strong></td><td class="num"><strong>$94.000</strong></td><td class="num"><strong>100%</strong></td></tr>
+          </tbody>
+        </table>
+        <ul class="pill-list" style="margin-top:10px;">
+          <li><strong>📱 Diferenciación Digital:</strong> Único competidor en Rovira con catálogo activo en WhatsApp Business, Instagram y Facebook.</li>
+          <li><strong>👗 Experiencia en Tienda:</strong> Probador dedicado (4 m²) y asesoría personalizada de tallas y ajuste Push Up.</li>
+          <li><strong>🔄 Rotación Inteligente:</strong> Reposición en 1 a 3 días con proveedor nacional evitando quiebres de stock.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📊 Cascada de Valor Unitario y Proyección de Ingresos</h3>
+        <div class="chart-box"><canvas id="chartRevenueGrowth"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi teal"><div class="kpi-label">Ingresos Año 1</div><div class="kpi-val">$243,7 M</div></div>
+          <div class="kpi gold"><div class="kpi-label">Ingresos Año 5</div><div class="kpi-val">$374,0 M</div></div>
+          <div class="kpi"><div class="kpi-label">Crecimiento 5 Años</div><div class="kpi-val">+53,5%</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION BAR -->
+  <div id="nav-bar">
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">◀ Anterior</button>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="dots" id="dots-container"></div>
+      <span id="slide-counter" style="font-size:0.8rem; font-weight:700; color:#475569;">1 / 11</span>
+    </div>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Siguiente ▶</button>
+  </div>
+</div>
+
+<script>
+// ... existing code ... -->
+  document.querySelectorAll('.ut-mini-logo').forEach(el => {
+    el.innerHTML = miniLogoSVG;
+  });
+
+  let currentSlide = 1;
+  const totalSlides = 11;
+
+  // Create dots
+// ... existing code ... -->
+  // Chart.js Global Defaults
+  Chart.defaults.font.family = "'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#334155';
+
+  // Slide 2: Gráfica 1 - Conocimiento de la prenda (82% Sí vs 18% No)
+  new Chart(document.getElementById('chartKnow'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sí conoce (82%)', 'No conoce (18%)'],
+      datasets: [{ data: [82, 18], backgroundColor: ['#2563EB', '#E2E8F0'], borderWidth: 1 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: '1. Conocimiento Prenda', font: { size: 11, weight: 'bold' } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Slide 2: Gráfica 2 - Intención de compra (84% Sí vs 16% No)
+  new Chart(document.getElementById('chartBuy'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sí compraría (84%)', 'No compraría (16%)'],
+      datasets: [{ data: [84, 16], backgroundColor: ['#0D9488', '#E2E8F0'], borderWidth: 1 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: '2. Intención de Compra', font: { size: 11, weight: 'bold' } },
+        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Slide 2: Gráfica 3 - Criterio principal de decisión (84% Calidad, 10% Precio, 6% Diseño/Marca)
+  new Chart(document.getElementById('chartCriteria'), {
+    type: 'bar',
+    data: {
+      labels: ['Calidad', 'Precio', 'Diseño'],
+      datasets: [{
+        label: '% Preferencia',
+        data: [84, 10, 6],
+        backgroundColor: ['#9B1B20', '#D4A017', '#64748B'],
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: '3. Criterio de Decisión', font: { size: 11, weight: 'bold' } },
+        legend: { display: false }
+      },
+      scales: { y: { max: 100, ticks: { font: { size: 9 } } }, x: { ticks: { font: { size: 10 } } } }
+    }
+  });
+
+  // Slide 3: Market Combo Chart
+// ... existing code ... -->
+  // Slide 10: Gráfico de Barras Horizontales Comparativas de Viabilidad (Reemplazo del Radar)
+  new Chart(document.getElementById('chartViabilityBars'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'Intención de Compra (Encuesta)',
+        'Margen Bruto Unitario (2026)',
+        'TIR Sin Financiación',
+        'TIR Con Financiación'
+      ],
+      datasets: [{
+        label: 'Porcentaje (%)',
+        data: [84, 73.4, 60, 127],
+        backgroundColor: ['#2563EB', '#D4A017', '#0D9488', '#9B1B20'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: 'Indicadores Clave de Aceptación y Rentabilidad (%)' }
+      },
+      scales: {
+        x: { min: 0, max: 140, title: { display: true, text: 'Porcentaje (%)' } }
+      }
+    }
+  });
+
+  // Slide 11: Revenue & Net Profit Growth
+// ... existing code ... -->
