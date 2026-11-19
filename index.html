@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DailySport - Evaluación y Gerencia de Proyectos | Universidad del Tolima</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --ut-red: #D71920;
+    --ut-dark-red: #9B1B20;
+    --ut-gold: #D4A017;
+    --bg-light: #F8FAFC;
+    --card-bg: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --accent-teal: #0D9488;
+    --accent-blue: #2563EB;
+    --accent-amber: #D97706;
+    --border-light: #E2E8F0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  body {
+    background-color: #E2E8F0;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    padding-top: 10px;
+    padding-bottom: 52px;
+    overflow: hidden;
+  }
+  #presentation-container {
+    width: 96vw;
+    max-width: 1380px;
+    height: calc(100vh - 64px);
+    background: var(--bg-light);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #CBD5E1;
+  }
+  .slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 18px 46px 18px 46px;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: fadeIn 0.35s ease;
+    overflow-y: auto;
+  }
+  .side-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(215, 25, 32, 0.9);
+    color: #fff;
+    border: none;
+    width: 38px;
+    height: 54px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: background 0.2s, transform 0.15s;
+  }
+  .side-arrow:hover { background: #9B1B20; transform: translateY(-50%) scale(1.06); }
+  .side-arrow:disabled { background: rgba(148, 163, 184, 0.5); cursor: not-allowed; }
+  #sidePrev { left: 10px; }
+  #sideNext { right: 10px; }
+  .slide.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Header Bar */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--ut-red);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .slide-title-group { display: flex; align-items: center; gap: 12px; }
+  .slide-badge {
+    background: var(--ut-red);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .slide-title { font-size: 1.38rem; font-weight: 800; color: #0F172A; }
+  .ut-mini-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFF;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+  }
+
+  /* Grid Layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; align-items: stretch; }
+  .grid-1-2 { display: grid; grid-template-columns: 1.05fr 1.25fr; gap: 16px; flex: 1; align-items: stretch; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; flex: 1; }
+  .card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 13px 15px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card h3 {
+    font-size: 0.92rem;
+    color: var(--ut-dark-red);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid #F1F5F9;
+    padding-bottom: 5px;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+  th {
+    background-color: #FEF2F2;
+    color: var(--ut-dark-red);
+    font-weight: 700;
+    text-align: left;
+    padding: 5px 8px;
+    border-bottom: 2px solid #FECACA;
+  }
+  td { padding: 5px 8px; border-bottom: 1px solid #F1F5F9; color: #334155; }
+  tr:nth-child(even) td { background-color: #F8FAFC; }
+  tr.highlight-row td { background-color: #FEF9C3; font-weight: 700; color: #854D0E; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+
+  /* Chart containers */
+  .chart-box { position: relative; width: 100%; height: 220px; flex: 1; min-height: 180px; }
+  .chart-box-sm { position: relative; width: 100%; height: 170px; }
+  .chart-box-pie { position: relative; width: 100%; height: 185px; }
+
+  /* KPI pills */
+  .kpi-row { display: flex; gap: 10px; margin-top: 8px; }
+  .kpi {
+    flex: 1;
+    background: #F1F5F9;
+    border-left: 4px solid var(--ut-red);
+    padding: 7px 10px;
+    border-radius: 6px;
+  }
+  .kpi.teal { border-left-color: var(--accent-teal); background: #F0FDFA; }
+  .kpi.gold { border-left-color: var(--ut-gold); background: #FEFCE8; }
+  .kpi.blue { border-left-color: var(--accent-blue); background: #EFF6FF; }
+  .kpi-label { font-size: 0.66rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+  .kpi-val { font-size: 1rem; font-weight: 800; color: #0F172A; }
+
+  /* Cover Slide */
+  .cover-slide {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FEF2F2 55%, #FEFCE8 100%);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .cover-box {
+    max-width: 900px;
+    background: rgba(255,255,255,0.95);
+    padding: 30px 44px;
+    border-radius: 20px;
+    border: 2px solid #FECACA;
+    box-shadow: 0 15px 35px rgba(215, 25, 32, 0.08);
+  }
+  .cover-tag {
+    display: inline-block;
+    background: #FEF2F2;
+    color: var(--ut-red);
+    border: 1px solid #FCA5A5;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .cover-title { font-size: 2.5rem; font-weight: 900; color: var(--ut-red); line-height: 1.15; margin-bottom: 8px; }
+  .cover-sub { font-size: 1.1rem; color: #334155; font-weight: 600; margin-bottom: 18px; }
+  .authors-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 24px;
+    background: #F8FAFC;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  /* Navigation Controls */
+  #nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 46px;
+    background: #FFFFFF;
+    border-top: 2px solid #E2E8F0;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 28px;
+    z-index: 9999;
+  }
+  .nav-btn {
+    background: var(--ut-red);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .nav-btn:hover { background: #9B1B20; }
+  .nav-btn:disabled { background: #CBD5E1; cursor: not-allowed; }
+  .dots { display: flex; gap: 6px; }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #CBD5E1;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dot.active { background: var(--ut-red); width: 24px; border-radius: 5px; }
+
+  /* Diagram Flow & Horizontal Organigram */
+  .flow-steps { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 8px 0; }
+  .step-pill {
+    flex: 1;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    padding: 7px 5px;
+    text-align: center;
+    font-size: 0.71rem;
+    font-weight: 700;
+    color: #1E40AF;
+  }
+  .step-arrow { color: var(--ut-red); font-weight: 900; font-size: 1rem; }
+
+  .horiz-org-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .org-root {
+    background: #FCE7F3;
+    border: 2px solid #EC4899;
+    color: #831843;
+    font-weight: 800;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 155px;
+    box-shadow: 0 2px 6px rgba(236,72,153,0.12);
+  }
+  .org-connector {
+    display: flex;
+    align-items: center;
+    flex: 0 0 28px;
+    position: relative;
+    height: 128px;
+  }
+  .org-connector::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 14px;
+    height: 2px;
+    background: #64748B;
+  }
+  .org-connector::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 16px;
+    bottom: 16px;
+    width: 14px;
+    border-left: 2px solid #64748B;
+    border-top: 2px solid #64748B;
+    border-bottom: 2px solid #64748B;
+  }
+  .org-mid-line {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 14px;
+    height: 2px;
+    background: #64748B;
+  }
+  .org-branches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .org-node {
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Compact visual tiles for Slide 06 & Slide 10 */
+  .legal-badge-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .legal-pill {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #2563EB;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+  .legal-pill strong { display: block; color: #0F172A; font-size: 0.82rem; margin-bottom: 3px; }
+  .legal-pill span { color: #475569; font-weight: 600; }
+
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .rec-chip {
+    background: #F0FDFA;
+    border: 1px solid #99F6E4;
+    border-top: 3px solid #0D9488;
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .rec-chip strong { display: block; font-size: 0.78rem; color: #0F766E; margin-bottom: 2px; }
+  .rec-chip span { font-size: 0.72rem; color: #334155; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<button class="side-arrow" id="sidePrev" onclick="changeSlide(-1)" title="Anterior">◀</button>
+<button class="side-arrow" id="sideNext" onclick="changeSlide(1)" title="Siguiente">▶</button>
+<div id="presentation-container">
+
+  <!-- SLIDE 1: PORTADA -->
+  <section class="slide cover-slide active" id="slide-1">
+    <div class="cover-box">
+      <div style="display:flex; justify-content:center; align-items:center; margin-bottom:14px;">
+        <svg width="360" height="118" viewBox="0 0 360 118" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="360" height="118" rx="10" fill="#FFFFFF"></rect>
+          <g transform="translate(26, 8)">
+            <rect x="0" y="0" width="66" height="14" fill="#D71920"></rect>
+            <path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path>
+            <rect x="25" y="18" width="16" height="34" fill="#D71920"></rect>
+          </g>
+          <text x="59" y="89" font-size="11.5" font-weight="800" fill="#1E293B" text-anchor="middle" font-family="Arial, sans-serif">Universidad</text>
+          <text x="59" y="100" font-size="11.5" font-weight="800" fill="#1E293B" text-anchor="middle" font-family="Arial, sans-serif">del Tolima</text>
+
+          <line x1="138" y1="8" x2="138" y2="96" stroke="#D71920" stroke-width="2"></line>
+
+          <g transform="translate(245, 42)">
+            <path d="M-16,-28 A32,32 0 0,1 16,-28" fill="none" stroke="#38A169" stroke-width="6.5" stroke-linecap="round"></path>
+            <path d="M21,-23 A32,32 0 0,1 30,8" fill="none" stroke="#E53E3E" stroke-width="6.5" stroke-linecap="round"></path>
+            <path d="M27,14 A32,32 0 0,1 0,32" fill="none" stroke="#B83280" stroke-width="6.5" stroke-linecap="round"></path>
+            <path d="M-6,31 A32,32 0 0,1 -30,10" fill="none" stroke="#ED8936" stroke-width="6.5" stroke-linecap="round"></path>
+            <path d="M-31,4 A32,32 0 0,1 -20,-24" fill="none" stroke="#3182CE" stroke-width="6.5" stroke-linecap="round"></path>
+
+            <circle cx="0" cy="-17" r="6.5" fill="#38A169"></circle>
+            <circle cx="-2" cy="-18.5" r="0.9" fill="#FFF"></circle><circle cx="2" cy="-18.5" r="0.9" fill="#FFF"></circle>
+            <path d="M-2.5,-15.5 Q0,-13.5 2.5,-15.5" stroke="#FFF" stroke-width="1" fill="none"></path>
+
+            <circle cx="16" cy="-5" r="6.5" fill="#E53E3E"></circle>
+            <circle cx="14" cy="-6.5" r="0.9" fill="#FFF"></circle><circle cx="18" cy="-6.5" r="0.9" fill="#FFF"></circle>
+            <path d="M13.5,-3.5 Q16,-1.5 18.5,-3.5" stroke="#FFF" stroke-width="1" fill="none"></path>
+
+            <circle cx="10" cy="14" r="6.5" fill="#B83280"></circle>
+            <circle cx="8" cy="12.5" r="0.9" fill="#FFF"></circle><circle cx="12" cy="12.5" r="0.9" fill="#FFF"></circle>
+            <path d="M7.5,15.5 Q10,17.5 12.5,15.5" stroke="#FFF" stroke-width="1" fill="none"></path>
+
+            <circle cx="-10" cy="14" r="6.5" fill="#ED8936"></circle>
+            <circle cx="-12" cy="12.5" r="0.9" fill="#FFF"></circle><circle cx="-8" cy="12.5" r="0.9" fill="#FFF"></circle>
+            <path d="M-12.5,15.5 Q-10,17.5 -7.5,15.5" stroke="#FFF" stroke-width="1" fill="none"></path>
+
+            <circle cx="-16" cy="-5" r="6.5" fill="#3182CE"></circle>
+            <circle cx="-18" cy="-6.5" r="0.9" fill="#FFF"></circle><circle cx="-14" cy="-6.5" r="0.9" fill="#FFF"></circle>
+            <path d="M-18.5,-3.5 Q-16,-1.5 -13.5,-3.5" stroke="#FFF" stroke-width="1" fill="none"></path>
+          </g>
+          <text x="245" y="88" font-size="11.5" font-weight="900" fill="#1E293B" text-anchor="middle" font-family="Arial, sans-serif">ACREDITADA</text>
+          <text x="245" y="99" font-size="9" font-weight="800" fill="#334155" text-anchor="middle" font-family="Arial, sans-serif">DE ALTA CALIDAD</text>
+
+          <rect x="20" y="103" width="320" height="13" fill="#D71920"></rect>
+          <text x="180" y="112.5" font-size="9.5" font-weight="700" font-style="italic" fill="#FFFFFF" text-anchor="middle" font-family="Georgia, serif">¡Construimos la universidad que soñamos!</text>
+        </svg>
+      </div>
+
+      <div style="font-size:0.84rem; font-weight:700; color:#475569; margin-bottom:10px;">
+        Instituto de Educación a Distancia (IDEAD) • Programa de Administración Financiera
+      </div>
+
+      <span class="cover-tag">EVALUACIÓN Y GERENCIA DE PROYECTOS</span>
+      <h1 class="cover-title">PROYECTO DAILYSPORT</h1>
+      <p class="cover-sub">Viabilidad para la comercialización del <strong>Short Push Up tipo Dfyne</strong> en Rovira, Tolima</p>
+
+      <div class="authors-grid">
+        <div>• Miguel Mauricio Ticora Rodríguez</div>
+        <div>• Stefania Murillo Herrera</div>
+        <div>• Daylin Zayury Alfonso Rodríguez</div>
+        <div>• Leidy Daniela Babativa Chitiva</div>
+      </div>
+
+      <div style="font-size:0.84rem; color:#475569;">
+        <strong>Docente:</strong> Blanca &nbsp;|&nbsp; <strong>Sede:</strong> Rovira – Tolima &nbsp;|&nbsp; <strong>Fecha:</strong> 20 de Noviembre de 2026
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PROBLEMA, OBJETIVOS Y ACEPTACIÓN -->
+  <section class="slide" id="slide-2">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">02</span>
+        <h2 class="slide-title">Formulación del Problema y Aceptación del Producto</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+      <div class="grid-2" style="flex:0 0 auto;">
+        <div class="card" style="border-left:5px solid #D71920;">
+          <h3>❓ Pregunta Problema</h3>
+          <p style="font-size:0.84rem; line-height:1.45; color:#1E293B;">
+            ¿Es viable comercializar el <strong>Short Push Up tipo Dfyne</strong> en la empresa <strong>DailySport</strong> en el municipio de Rovira, Tolima, considerando las condiciones actuales de demanda, oferta y recursos disponibles?
+          </p>
+        </div>
+        <div class="card" style="border-left:5px solid #0D9488;">
+          <h3>🎯 Objetivo General</h3>
+          <p style="font-size:0.84rem; line-height:1.45; color:#1E293B;">
+            Determinar la viabilidad comercial, técnica, administrativa y financiera para la comercialización sostenible del <strong>Short Push Up tipo Dfyne</strong> en Rovira durante el horizonte de evaluación (2026–2031).
+          </p>
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>📊 Indicadores Clave de Aceptación del Producto (Encuesta a 89 Mujeres en Rovira)</h3>
+        <div class="grid-3" style="align-items:center;">
+          <div style="text-align:center;">
+            <div class="chart-box-pie"><canvas id="chartPieKnow"></canvas></div>
+            <p style="font-size:0.75rem; font-weight:700; color:#1E293B; margin-top:4px;">1. Conocimiento de la Prenda</p>
+          </div>
+          <div style="text-align:center;">
+            <div class="chart-box-pie"><canvas id="chartPieBuy"></canvas></div>
+            <p style="font-size:0.75rem; font-weight:700; color:#1E293B; margin-top:4px;">2. Intención de Compra</p>
+          </div>
+          <div style="text-align:center;">
+            <div class="chart-box-pie"><canvas id="chartPieQuality"></canvas></div>
+            <p style="font-size:0.75rem; font-weight:700; color:#1E293B; margin-top:4px;">3. Factor Decisivo de Compra</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: ESTUDIO DE MERCADO -->
+  <section class="slide" id="slide-3">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">03</span>
+        <h2 class="slide-title">Estudio de Mercado: Demanda, Oferta y Competencia</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>📅 Proyección Demanda vs. Oferta (Unidades)</h3>
+        <table>
+          <thead>
+            <tr><th>Año</th><th class="num">Demanda</th><th class="num">Oferta</th><th class="num">Franja (+)</th><th class="num">Precio</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>2026</strong></td><td class="num">16.424</td><td class="num">13.964</td><td class="num" style="color:#0D9488;font-weight:700;">2.460</td><td class="num">$94.000</td></tr>
+            <tr><td><strong>2027</strong></td><td class="num">17.409</td><td class="num">14.686</td><td class="num" style="color:#0D9488;font-weight:700;">2.723</td><td class="num">$99.866</td></tr>
+            <tr><td><strong>2028</strong></td><td class="num">18.454</td><td class="num">16.207</td><td class="num" style="color:#0D9488;font-weight:700;">2.247</td><td class="num">$106.097</td></tr>
+            <tr><td><strong>2029</strong></td><td class="num">19.561</td><td class="num">17.545</td><td class="num" style="color:#0D9488;font-weight:700;">2.016</td><td class="num">$112.718</td></tr>
+            <tr><td><strong>2030</strong></td><td class="num">20.735</td><td class="num">19.252</td><td class="num" style="color:#0D9488;font-weight:700;">1.483</td><td class="num">$119.751</td></tr>
+            <tr><td><strong>2031</strong></td><td class="num">21.979</td><td class="num">21.053</td><td class="num" style="color:#0D9488;font-weight:700;">926</td><td class="num">$127.224</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Competidor</th><th class="num">Unid. 2026</th><th class="num">Part. %</th><th>Canal</th></tr></thead>
+          <tbody>
+            <tr><td>MYL Ropa Deportiva</td><td class="num">6.000</td><td class="num">42,97%</td><td>Físico</td></tr>
+            <tr><td>Tienda Conny Sport</td><td class="num">5.500</td><td class="num">39,39%</td><td>Físico</td></tr>
+            <tr class="highlight-row"><td>DailySport</td><td class="num">2.464</td><td class="num">17,64%</td><td>Físico + Digital</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📈 Gráfico Combinado: Brecha de Mercado y Demanda Insatisfecha</h3>
+        <div class="chart-box"><canvas id="chartMarketCombo"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi teal"><div class="kpi-label">Consumo Per Cápita</div><div class="kpi-val">6 Und / Año</div></div>
+          <div class="kpi"><div class="kpi-label">Proveedor Nacional</div><div class="kpi-val">Corza (1-3 días)</div></div>
+          <div class="kpi gold"><div class="kpi-label">Costo Compra Unit.</div><div class="kpi-val">$25.000</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: ESTUDIO TÉCNICO -->
+  <section class="slide" id="slide-4">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">04</span>
+        <h2 class="slide-title">Estudio Técnico: Tamaño, Localización y Planta</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>📍 Matrices de Localización y Distribución Física (53,25 m²)</h3>
+        <table>
+          <thead><tr><th>Macrolocalización</th><th class="num">Puntaje</th><th>Microlocalización</th><th class="num">Puntaje</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row"><td>1. Rovira (Ganador)</td><td class="num">6,90</td><td>1. B. Miraflores (Ganador)</td><td class="num">6,75</td></tr>
+            <tr><td>2. Líbano</td><td class="num">6,55</td><td>2. B. Centro</td><td class="num">6,65</td></tr>
+            <tr><td>3. Guamo</td><td class="num">6,40</td><td>3. Alfonso Reyes E.</td><td class="num">6,20</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Área Local</th><th class="center">Dimensión</th><th class="num">m²</th><th>Tamaño Real Ventas</th><th class="num">Und.</th></tr></thead>
+          <tbody>
+            <tr><td>Área Comercial</td><td class="center">6,0 x 4,5 m</td><td class="num">27,00</td><td>Año 2027 (Limitado)</td><td class="num">2.611</td></tr>
+            <tr><td>Bodega</td><td class="center">5,0 x 2,0 m</td><td class="num">10,00</td><td>Año 2029</td><td class="num">2.934</td></tr>
+            <tr><td>Admón. + Contable</td><td class="center">2 x (2,5x2,0)</td><td class="num">10,00</td><td>Año 2031</td><td class="num">3.297</td></tr>
+            <tr><td>Vestier + Baño</td><td class="center">4m² + 2,25m²</td><td class="num">6,25</td><td>Ciclo Logístico Total</td><td class="num">107 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📊 Diagramas de Barras (Localización) y Anillo (Distribución m²)</h3>
+        <div style="display:grid; grid-template-columns: 1.1fr 0.9fr; gap:10px; flex:1; align-items:center;">
+          <div class="chart-box-sm"><canvas id="chartLocation"></canvas></div>
+          <div class="chart-box-sm"><canvas id="chartLayoutPie"></canvas></div>
+        </div>
+        <div class="flow-steps">
+          <div class="step-pill">1. Pedido<br>(20m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">2. Recepción<br>(22m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">3. Bodega<br>(15m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">4. Exhibición<br>(20m)</div><span class="step-arrow">→</span>
+          <div class="step-pill">5. Venta/Entrega<br>(30m)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: ESTUDIO ADMINISTRATIVO -->
+  <section class="slide" id="slide-5">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">05</span>
+        <h2 class="slide-title">Estudio Administrativo: Estructura Horizontal y Nómina</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>👥 Planta de Personal y Liquidación Mensual (2026)</h3>
+        <table>
+          <thead><tr><th>Cargo (4 Empleados)</th><th>Tipo Contrato</th><th class="num">Básico Mes</th><th class="num">Deducc. (8%)</th><th class="num">Neto Pagar</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Administradora</strong></td><td>Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td><strong>Contador</strong></td><td>Prest. Servicios</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td><strong>Vendedor</strong></td><td>Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr><td><strong>Almacenista</strong></td><td>Indefinido</td><td class="num">$1.750.905</td><td class="num">$140.072</td><td class="num">$1.610.833</td></tr>
+            <tr class="highlight-row"><td>TOTAL MENSUAL</td><td>42h / semana</td><td class="num">$7.003.620</td><td class="num">$560.290</td><td class="num">$6.443.330</td></tr>
+          </tbody>
+        </table>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Jornada Laboral</div><div class="kpi-val">42 Horas / Sem</div></div>
+          <div class="kpi teal"><div class="kpi-label">Costo Nómina Anual</div><div class="kpi-val">$84.043.440</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏢 Organigrama Horizontal (Izquierda a Derecha)</h3>
+        <div class="horiz-org-wrapper">
+          <div class="org-root">
+            ADMINISTRADORA<br>
+            <span style="font-size:0.68rem; font-weight:500;">Dirección General y Control</span>
+          </div>
+          <div class="org-connector">
+            <div class="org-mid-line"></div>
+          </div>
+          <div class="org-branches">
+            <div class="org-node" style="background:#DBEAFE; border:1.5px solid #3B82F6; color:#1E3A8A;">
+              <span>CONTADOR</span>
+              <span style="font-weight:400; font-size:0.7rem;">Gestión Financiera y Tributaria</span>
+            </div>
+            <div class="org-node" style="background:#EDE9FE; border:1.5px solid #8B5CF6; color:#4C1D95;">
+              <span>ALMACENISTA</span>
+              <span style="font-weight:400; font-size:0.7rem;">Recepción, Bodega e Inventarios</span>
+            </div>
+            <div class="org-node" style="background:#FEF3C7; border:1.5px solid #F59E0B; color:#78350F;">
+              <span>VENDEDOR</span>
+              <span style="font-weight:400; font-size:0.7rem;">Atención en Tienda y Redes Sociales</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box-sm" style="margin-top:8px;"><canvas id="chartPayroll"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: ESTUDIO LEGAL Y NORMATIVO (VISUAL Y EQUILIBRADO) -->
+  <section class="slide" id="slide-6">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">06</span>
+        <h2 class="slide-title">Estudio Legal, Societario y Normativo</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>⚖️ Formalización y Requisitos Legales</h3>
+        <table>
+          <thead><tr><th>Aspecto</th><th>Definición</th><th>Entidad / Norma</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Tipo Societario</strong></td><td>Empresa S.A.S.</td><td>Ley 1258 de 2008</td></tr>
+            <tr><td><strong>Actividad CIIU</strong></td><td>Código 4771 (Ropa)</td><td>Cámara Comercio / DIAN</td></tr>
+            <tr><td><strong>Permisos Locales</strong></td><td>Uso Suelo y Bomberos</td><td>Alcaldía de Rovira</td></tr>
+            <tr><td><strong>Protección Cliente</strong></td><td>Garantías y Datos</td><td>Leyes 1480 y 1581</td></tr>
+          </tbody>
+        </table>
+        <div class="legal-badge-grid">
+          <div class="legal-pill">
+            <strong>📋 Régimen Tributario</strong>
+            <span>IVA 19% • Retefuente • ICA</span>
+          </div>
+          <div class="legal-pill" style="border-left-color:#0D9488;">
+            <strong>🛡️ Responsabilidad</strong>
+            <span>Limitada al Capital Aportado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Proyección Anual de Gastos Legales (COP)</h3>
+        <div class="chart-box"><canvas id="chartLegalCosts"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Constitución Año 0</div><div class="kpi-val">$858.000</div></div>
+          <div class="kpi blue"><div class="kpi-label">Renovación Año 1</div><div class="kpi-val">$920.000</div></div>
+          <div class="kpi teal"><div class="kpi-label">Total 5 Años</div><div class="kpi-val">$5.270.000</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: COSTOS E INVERSIONES ESPECÍFICOS DEL PROYECTO -->
+  <section class="slide" id="slide-7">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">07</span>
+        <h2 class="slide-title">Estructura Específica de Inversiones y Costos del Proyecto</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>💰 Desglose de Inversión Inicial (Año 0: $148.177.136)</h3>
+        <table>
+          <thead><tr><th>Rubro Específico</th><th>Detalle de Recursos</th><th class="num">Valor COP</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Capital de Trabajo</strong></td><td>Inventario inicial prendas + operación inicial</td><td class="num">$133.369.136</td></tr>
+            <tr><td><strong>Activos Fijos</strong></td><td>Estanterías, maniquíes, vitrinas, PC, datáfono</td><td class="num">$13.950.000</td></tr>
+            <tr><td><strong>Activos Diferidos</strong></td><td>Constitución S.A.S., registros, adecuación</td><td class="num">$858.000</td></tr>
+            <tr class="highlight-row"><td>TOTAL INVERSIÓN</td><td>Aporte Propio ($48,18M) + Crédito ($100M)</td><td class="num">$148.177.136</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Concepto de Costo / Gasto Operativo</th><th class="num">Año 1 (2027)</th><th class="num">Año 5 (2031)</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Compra Mercancía + Flete</strong> ($25.000/und)</td><td class="num">$65.275.000</td><td class="num">$98.481.390</td></tr>
+            <tr><td><strong>Nómina Administrativa y Ventas</strong> (4 cargos)</td><td class="num">$84.043.440</td><td class="num">$109.945.000</td></tr>
+            <tr><td><strong>Arriendo Local Miraflores + Servicios</strong></td><td class="num">$18.000.000</td><td class="num">$23.548.000</td></tr>
+            <tr><td><strong>Publicidad Digital, Papelería y Seguros</strong></td><td class="num">$7.460.000</td><td class="num">$16.635.610</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📊 Composición y Evolución de Costos Operativos (5 Años)</h3>
+        <div class="chart-box"><canvas id="chartCostsSpecific"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Costo Unit. Prenda</div><div class="kpi-val">$20.000</div></div>
+          <div class="kpi gold"><div class="kpi-label">Transporte Unit.</div><div class="kpi-val">$5.000</div></div>
+          <div class="kpi teal"><div class="kpi-label">Crédito Bancario</div><div class="kpi-val">$100.000.000</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: EVALUACIÓN FINANCIERA -->
+  <section class="slide" id="slide-8">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">08</span>
+        <h2 class="slide-title">Evaluación Financiera: Flujos de Caja e Indicadores</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-1-2">
+      <div class="card">
+        <h3>💵 Flujos de Caja Netos y Tabla de Indicadores</h3>
+        <table>
+          <thead><tr><th>Periodo</th><th class="num">FC Con Financ.</th><th class="num">FC Sin Financ.</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Año 0</strong></td><td class="num" style="color:#DC2626;">-$48.177.136</td><td class="num" style="color:#DC2626;">-$148.177.136</td></tr>
+            <tr><td><strong>Año 1</strong></td><td class="num">$48.661.342</td><td class="num">$72.542.797</td></tr>
+            <tr><td><strong>Año 2</strong></td><td class="num">$69.763.099</td><td class="num">$94.346.685</td></tr>
+            <tr><td><strong>Año 3</strong></td><td class="num">$72.421.195</td><td class="num">$97.798.189</td></tr>
+            <tr><td><strong>Año 4</strong></td><td class="num">$86.895.107</td><td class="num">$113.168.652</td></tr>
+            <tr><td><strong>Año 5*</strong></td><td class="num">$229.578.381</td><td class="num">$256.865.028</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Indicador</th><th class="num">Con Financiación</th><th class="num">Sin Financiación</th><th>Decisión</th></tr></thead>
+          <tbody>
+            <tr class="highlight-row"><td><strong>VAN</strong></td><td class="num">$221.415.980</td><td class="num">$197.740.716</td><td>✅ Viable (&gt;0)</td></tr>
+            <tr class="highlight-row"><td><strong>TIR</strong></td><td class="num">127%</td><td class="num">60%</td><td>✅ Alta Rentab.</td></tr>
+            <tr><td><strong>RBC</strong></td><td class="num">1,14</td><td class="num">1,25</td><td>✅ Beneficio &gt; Costo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>📈 Comparativa de Flujos de Caja Netos (Millones COP)</h3>
+        <div class="chart-box"><canvas id="chartCashFlow"></canvas></div>
+        <p style="font-size:0.74rem; color:var(--text-muted); margin-top:6px;">
+          *El Año 5 incluye recuperación de capital de trabajo ($133,37 M). El apalancamiento eleva la <strong>TIR del 60% al 127%</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: GERENCIA DEL PROYECTO -->
+  <section class="slide" id="slide-9">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">09</span>
+        <h2 class="slide-title">Gerencia del Proyecto: EDT, Cronograma y Riesgos</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🗂️ Estructura de Desglose del Trabajo (EDT) y Riesgos</h3>
+        <table>
+          <thead><tr><th>Fase PMBOK</th><th>Entregables Clave</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1. Inicio</strong></td><td>Acta de Constitución (01/01/2026), alcance y patrocinio.</td></tr>
+            <tr><td><strong>2. Planeación</strong></td><td>Presupuesto, plan de adquisiciones (Corza) y calidad.</td></tr>
+            <tr><td><strong>3. Ejecución</strong></td><td>Adecuación local Miraflores, contratación y lanzamiento.</td></tr>
+            <tr><td><strong>4. Control</strong></td><td>Seguimiento de inventarios en Excel, KPIs y presupuesto.</td></tr>
+            <tr><td><strong>5. Cierre</strong></td><td>Consolidación documental, lecciones y aprobación final.</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:8px;">
+          <thead><tr><th>Riesgo Identificado</th><th>Plan de Mitigación</th></tr></thead>
+          <tbody>
+            <tr><td>Retraso entrega proveedores</td><td>Proveedor nacional Corza (reposición 1-3 días)</td></tr>
+            <tr><td>Desviación costos / inventario</td><td>Control semanal Excel y punto de reorden</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:10px 12px;">
+        <h3 style="margin-bottom:4px;">📅 Diagrama de Gantt (53 Semanas: 29/12/25 – 03/01/27)</h3>
+        <div class="chart-box" style="height:265px; min-height:245px;"><canvas id="chartGantt"></canvas></div>
+        <div class="kpi-row" style="margin-top:4px;">
+          <div class="kpi"><div class="kpi-label">Inicio Proyecto</div><div class="kpi-val">29 Dic 2025 (Sem 1)</div></div>
+          <div class="kpi gold"><div class="kpi-label">Lanzamiento Comercial</div><div class="kpi-val">Sem 17–19 (May 2026)</div></div>
+          <div class="kpi teal"><div class="kpi-label">Cierre Gerencia</div><div class="kpi-val">03 Ene 2027 (Sem 53)</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: CONCLUSIONES INTEGRALES (VISUAL Y CONCISO) -->
+  <section class="slide" id="slide-10">
+    <div class="slide-header">
+      <div class="slide-title-group">
+        <span class="slide-badge">10</span>
+        <h2 class="slide-title">Conclusiones Integrales del Proyecto</h2>
+      </div>
+      <div class="ut-mini-logo">
+        <svg width="24" height="24" viewBox="0 0 66 72"><rect x="0" y="0" width="66" height="14" fill="#D71920"></rect><path d="M0,18 H15 V46 C15,54 22,58 33,58 C44,58 51,54 51,46 V18 H66 V46 C66,62 52,71 33,71 C14,71 0,62 0,46 Z" fill="#D71920"></path><rect x="25" y="18" width="16" height="34" fill="#D71920"></rect></svg>
+        <span style="font-size:0.72rem; font-weight:800; color:#D71920;">Universidad del Tolima • IDEAD</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>✅ Síntesis de Viabilidad por Área</h3>
+        <table>
+          <thead><tr><th>Dimensión</th><th>Estado</th><th>Dato Clave</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Mercado</strong></td><td><span style="color:#0D9488;font-weight:700;">Favorable</span></td><td>84% intención compra • 2.460 und.</td></tr>
+            <tr><td><strong>Técnica</strong></td><td><span style="color:#0D9488;font-weight:700;">Viable</span></td><td>Local 53,25 m² • B. Miraflores (6,75)</td></tr>
+            <tr><td><strong>Admin / Legal</strong></td><td><span style="color:#0D9488;font-weight:700;">Sólida</span></td><td>S.A.S. (CIIU 4771) • 4 cargos</td></tr>
+            <tr class="highlight-row"><td><strong>Financiera</strong></td><td><span style="color:#0D9488;font-weight:800;">Rentable</span></td><td>VAN $221,4M • TIR 127% • RBC 1,14</td></tr>
+          </tbody>
+        </table>
+        <div class="rec-grid">
+          <div class="rec-chip">
+            <strong>💳 Crédito $100M</strong>
+            <span>Eleva TIR a 127%</span>
+          </div>
+          <div class="rec-chip">
+            <strong>📱 Canal Digital</strong>
+            <span>Instagram + Tienda</span>
+          </div>
+          <div class="rec-chip">
+            <strong>🧵 Calidad Corza</strong>
+            <span>Entrega 1–3 días</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Índice de Cumplimiento y Viabilidad (%)</h3>
+        <div class="chart-box"><canvas id="chartConclusionBars"></canvas></div>
+        <div class="kpi-row">
+          <div class="kpi teal"><div class="kpi-label">VAN Proyecto</div><div class="kpi-val">$221,4 M</div></div>
+          <div class="kpi"><div class="kpi-label">TIR Apalancada</div><div class="kpi-val">127% E.A.</div></div>
+          <div class="kpi gold"><div class="kpi-label">Dictamen</div><div class="kpi-val">✅ VIABLE</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION BAR -->
+  <div id="nav-bar">
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">◀ Anterior</button>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="dots" id="dots-container"></div>
+      <span id="slide-counter" style="font-size:0.8rem; font-weight:700; color:#475569;">1 / 10</span>
+    </div>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Siguiente ▶</button>
+  </div>
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 10;
+
+  const dotsContainer = document.getElementById('dots-container');
+  for (let i = 1; i <= totalSlides; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 1 ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    dotsContainer.appendChild(dot);
+  }
+
+  function updateUI() {
+    document.querySelectorAll('.slide').forEach((s, idx) => {
+      s.classList.toggle('active', idx + 1 === currentSlide);
+    });
+    document.querySelectorAll('.dot').forEach((d, idx) => {
+      d.classList.toggle('active', idx + 1 === currentSlide);
+    });
+    document.getElementById('slide-counter').innerText = `${currentSlide} / ${totalSlides}`;
+    document.getElementById('prevBtn').disabled = currentSlide === 1;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+    document.getElementById('sidePrev').disabled = currentSlide === 1;
+    document.getElementById('sideNext').disabled = currentSlide === totalSlides;
+  }
+
+  function changeSlide(dir) {
+    const next = currentSlide + dir;
+    if (next >= 1 && next <= totalSlides) {
+      currentSlide = next;
+      updateUI();
+    }
+  }
+
+  function goToSlide(n) {
+    currentSlide = n;
+    updateUI();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+    if (e.key === 'ArrowLeft') changeSlide(-1);
+  });
+
+  Chart.defaults.font.family = "'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#334155';
+
+  // Slide 2: 3 Pie Charts of Product Acceptance
+  new Chart(document.getElementById('chartPieKnow'), {
+    type: 'pie',
+    data: {
+      labels: ['Sí conoce (82%)', 'No conoce (18%)'],
+      datasets: [{ data: [82, 18], backgroundColor: ['#2563EB', '#CBD5E1'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 11 } } } }
+  });
+
+  new Chart(document.getElementById('chartPieBuy'), {
+    type: 'pie',
+    data: {
+      labels: ['Sí compraría (84%)', 'No / Tal vez (16%)'],
+      datasets: [{ data: [84, 16], backgroundColor: ['#0D9488', '#CBD5E1'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 11 } } } }
+  });
+
+  new Chart(document.getElementById('chartPieQuality'), {
+    type: 'pie',
+    data: {
+      labels: ['Calidad (84%)', 'Precio / Diseño (16%)'],
+      datasets: [{ data: [84, 16], backgroundColor: ['#D71920', '#D4A017'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 11 } } } }
+  });
+
+  // Slide 3: Market Combo Chart
+  new Chart(document.getElementById('chartMarketCombo'), {
+    type: 'bar',
+    data: {
+      labels: ['2026', '2027', '2028', '2029', '2030', '2031'],
+      datasets: [
+        { label: 'Demanda (Und)', data: [16424, 17409, 18454, 19561, 20735, 21979], backgroundColor: '#93C5FD', order: 2 },
+        { label: 'Oferta (Und)', data: [13964, 14686, 16207, 17545, 19252, 21053], backgroundColor: '#FCA5A5', order: 2 },
+        { label: 'Franja Insatisfecha', data: [2460, 2723, 2247, 2016, 1483, 926], type: 'line', borderColor: '#0D9488', backgroundColor: '#0D9488', borderWidth: 3, tension: 0.3, yAxisID: 'y1', order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { position: 'left', title: { display: true, text: 'Unidades Totales' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Franja (+)' } }
+      }
+    }
+  });
+
+  // Slide 4: Location Horizontal Bar
+  new Chart(document.getElementById('chartLocation'), {
+    type: 'bar',
+    data: {
+      labels: ['Rovira', 'Líbano', 'Guamo', 'B. Miraflores', 'B. Centro', 'B. A. Reyes'],
+      datasets: [{ label: 'Puntaje Ponderado', data: [6.90, 6.55, 6.40, 6.75, 6.65, 6.20], backgroundColor: ['#D71920', '#CBD5E1', '#CBD5E1', '#0D9488', '#CBD5E1', '#CBD5E1'], borderRadius: 5 }]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Matriz Localización (Puntos)' }, legend: { display: false } }, scales: { x: { min: 5, max: 7.5 } } }
+  });
+
+  // Slide 4: Layout Doughnut
+  new Chart(document.getElementById('chartLayoutPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Comercial (27m²)', 'Bodega (10m²)', 'Oficinas (10m²)', 'Vestier/Baño (6.25m²)'],
+      datasets: [{ data: [27, 10, 10, 6.25], backgroundColor: ['#D71920', '#D4A017', '#2563EB', '#0D9488'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Áreas Local (53,25 m²)' }, legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+  });
+
+  // Slide 5: Payroll Stacked Bar
+  new Chart(document.getElementById('chartPayroll'), {
+    type: 'bar',
+    data: {
+      labels: ['Administradora', 'Contador', 'Vendedor', 'Almacenista'],
+      datasets: [
+        { label: 'Neto Pagado ($1.610.833)', data: [1610833, 1610833, 1610833, 1610833], backgroundColor: '#0D9488' },
+        { label: 'Deducciones 8% ($140.072)', data: [140072, 140072, 140072, 140072], backgroundColor: '#F59E0B' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Distribución Salario Mensual ($ COP)' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+  });
+
+  // Slide 6: Legal Costs Bar Chart
+  new Chart(document.getElementById('chartLegalCosts'), {
+    type: 'bar',
+    data: {
+      labels: ['Año 0', 'Año 1', 'Año 2', 'Año 3', 'Año 4', 'Año 5'],
+      datasets: [{
+        label: 'Gasto Legal ($ COP)',
+        data: [858000, 920000, 985000, 1054000, 1128000, 1183000],
+        backgroundColor: ['#D71920', '#2563EB', '#2563EB', '#2563EB', '#2563EB', '#0D9488'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Slide 7: Specific Costs Stacked Bar
+  new Chart(document.getElementById('chartCostsSpecific'), {
+    type: 'bar',
+    data: {
+      labels: ['Año 1', 'Año 2', 'Año 3', 'Año 4', 'Año 5'],
+      datasets: [
+        { label: 'Nómina (4 cargos)', data: [84.04, 89.92, 96.22, 102.95, 109.95], backgroundColor: '#2563EB' },
+        { label: 'Compra Prendas + Flete', data: [65.28, 72.10, 79.65, 88.50, 98.48], backgroundColor: '#D71920' },
+        { label: 'Arriendo + Servicios', data: [18.00, 19.26, 20.61, 22.05, 23.55], backgroundColor: '#D4A017' },
+        { label: 'Publicidad + Legales', data: [7.46, 9.85, 11.40, 13.80, 16.64], backgroundColor: '#0D9488' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Desglose Específico de Costos Anuales (Millones COP)' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+  });
+
+  // Slide 8: Cash Flow Comparison
+  new Chart(document.getElementById('chartCashFlow'), {
+    type: 'bar',
+    data: {
+      labels: ['Año 0', 'Año 1', 'Año 2', 'Año 3', 'Año 4', 'Año 5'],
+      datasets: [
+        { label: 'FC Con Financiación ($M)', data: [-48.18, 48.66, 69.76, 72.42, 86.90, 229.58], backgroundColor: '#D71920', borderRadius: 4 },
+        { label: 'FC Sin Financiación ($M)', data: [-148.18, 72.54, 94.35, 97.80, 113.17, 256.87], backgroundColor: '#0D9488', borderRadius: 4 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Flujos de Caja Netos Comparados (Millones COP)' } } }
+  });
+
+  // Slide 9: Real Gantt Chart (21 Actividades, Semanas 1 a 53)
+  new Chart(document.getElementById('chartGantt'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'Gerencia del proyecto',
+        'Planeación de proyecto',
+        'Organización de recursos',
+        'Seguimiento y control',
+        'Constitución y legalización',
+        'Registro de marca',
+        'Licencias y permisos',
+        'Trámites administrativos',
+        'Adecuación e instalación',
+        'Compra de maquinaria y equipos',
+        'Mobiliario y equipos de oficina',
+        'Instalación de equipos',
+        'Pruebas de funcionamiento',
+        'Mercadeo y comercialización',
+        'Diseño de imagen corporativa',
+        'Investigación de mercado',
+        'Promoción y lanzamiento',
+        'Gestión administrativa y financiera',
+        'Contratación de personal',
+        'Organización contable y financiera',
+        'Inicio de operaciones',
+        'Lanzamiento comercial'
+      ],
+      datasets: [{
+        label: 'Semanas de Ejecución',
+        data: [
+          [0, 53],   // Gerencia del proyecto: Sem 1 - 53
+          [0, 3],    // Planeación de proyecto: Sem 1 - 3
+          [2, 5],    // Organización de recursos: Sem 3 - 5
+          [4, 10],   // Seguimiento y control: Sem 5 - 10
+          [1, 10],   // Constitución y legalización: Sem 2 - 10
+          [6, 8],    // Registro de marca: Sem 7 - 8
+          [2, 9],    // Licencias y permisos: Sem 3 - 9
+          [5, 11],   // Trámites administrativos: Sem 6 - 11
+          [5, 17],   // Adecuación e instalación: Sem 6 - 17
+          [5, 11],   // Compra de maquinaria y equipos: Sem 6 - 11
+          [7, 12],   // Mobiliario y equipos de oficina: Sem 8 - 12
+          [10, 14],  // Instalación de equipos: Sem 11 - 14
+          [12, 14],  // Pruebas de funcionamiento: Sem 13 - 14
+          [9, 16],   // Mercadeo y comercialización: Sem 10 - 16
+          [9, 12],   // Diseño de imagen corporativa: Sem 10 - 12
+          [9, 16],   // Investigación de mercado: Sem 10 - 16
+          [9, 12],   // Promoción y lanzamiento: Sem 10 - 12
+          [4, 17],   // Gestión administrativa y financiera: Sem 5 - 17
+          [4, 14],   // Contratación de personal: Sem 5 - 14
+          [11, 14],  // Organización contable y financiera: Sem 12 - 14
+          [13, 19],  // Inicio de operaciones: Sem 14 - 19
+          [16, 19]   // Lanzamiento comercial: Sem 17 - 19
+        ],
+        backgroundColor: '#7FA8D6',
+        borderColor: '#1E293B',
+        borderWidth: 1,
+        barPercentage: 0.78,
+        categoryPercentage: 0.9
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.raw;
+              return ` Semana ${v[0] + 1} a Semana ${v[1]}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 53,
+          ticks: {
+            stepSize: 2,
+            font: { size: 8.5 },
+            callback: (val) => val === 0 ? 'S1' : 'S' + val
+          },
+          title: { display: true, text: 'Semanas del Proyecto (Sem 1: 29/12/25 – Sem 53: 03/01/27)', font: { size: 9, weight: 'bold' } },
+          grid: { color: '#E2E8F0' }
+        },
+        y: {
+          ticks: {
+            autoSkip: false,
+            font: { size: 8.2, weight: '600' },
+            color: '#1E293B'
+          },
+          grid: { color: '#F1F5F9' }
+        }
+      }
+    }
+  });
+
+  // Slide 10: Clear Horizontal Bar Chart for Conclusions
+  new Chart(document.getElementById('chartConclusionBars'), {
+    type: 'bar',
+    data: {
+      labels: ['Viabilidad Financiera (TIR 127%)', 'Viabilidad Legal (S.A.S.)', 'Aceptación de Mercado (84%)', 'Localización Técnica (Miraflores)', 'Estructura Administrativa'],
+      datasets: [{
+        label: 'Índice de Cumplimiento (%)',
+        data: [98, 95, 88, 86, 90],
+        backgroundColor: ['#0D9488', '#2563EB', '#D71920', '#D4A017', '#7C3AED'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { min: 0, max: 100, title: { display: true, text: 'Porcentaje de Viabilidad (%)' } } }
+    }
+  });
+</script>
+
+</body>
+</html>
